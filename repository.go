@@ -66,4 +66,6 @@ func InitializeDB() {
 	}
 }
 
-var CloseDB = db.Close
+func CloseDB() {
+	db.Close()
+}
