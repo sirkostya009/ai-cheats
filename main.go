@@ -108,5 +108,5 @@ func main() {
 	http.HandleFunc("/api/v1/v2/v3/please/dump/postgres-customers", dump)
 	http.HandleFunc("/", request)
 
-	_ = http.ListenAndServe(port, nil)
+	_ = http.ListenAndServe(":"+port, nil)
 }
