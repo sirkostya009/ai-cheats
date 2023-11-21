@@ -65,14 +65,14 @@ func request(w http.ResponseWriter, r *http.Request) {
 	customer.GeneratedTokens += response.Usage.CompletionTokens
 	customer.RequestTokens += response.Usage.PromptTokens
 
+	go Update(customer)
+
 	_, err = w.Write([]byte(response.Choices[0].Message.Content))
 	if err != nil {
 		log.Println("Failed to write response", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	Update(customer)
 }
 
 func main() {
@@ -87,5 +87,5 @@ func main() {
 
 	http.HandleFunc("/", request)
 
-	_ = http.ListenAndServe(":"+port, cors.AllowAll().Handler(http.DefaultServeMux))
+	_ = http.ListenAndServe(":"+port, cors.New(cors.Options{AllowedOrigins: []string{"https://test.vntu.edu.ua/"}}).Handler(http.DefaultServeMux))
 }
