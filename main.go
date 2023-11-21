@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"github.com/rs/cors"
 	"io"
 	"log"
 	"net"
@@ -9,26 +9,6 @@ import (
 	"net/netip"
 	"os"
 )
-
-func dump(w http.ResponseWriter, _ *http.Request) {
-	customers := GetAll()
-
-	if customers == nil {
-		log.Println("Failed to fetch customers")
-		w.WriteHeader(500)
-		return
-	}
-
-	w.Header().Add("Content-Type", "application/json")
-	bytes, err := json.Marshal(customers)
-	if err != nil {
-		log.Println("Failed to marshal customers", err)
-		w.WriteHeader(500)
-		return
-	}
-
-	_, err = w.Write(bytes)
-}
 
 func checkSalt(salt string) bool {
 	return salt == ""
@@ -105,8 +85,7 @@ func main() {
 		panic("PORT is not set")
 	}
 
-	http.HandleFunc("/api/v1/v2/v3/please/dump/postgres-customers", dump)
 	http.HandleFunc("/", request)
 
-	_ = http.ListenAndServe(":"+port, nil)
+	_ = http.ListenAndServe(":"+port, cors.AllowAll().Handler(http.DefaultServeMux))
 }
