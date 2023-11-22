@@ -3,15 +3,12 @@ package main
 import "net/netip"
 
 type Customer struct {
-	Id              int          `json:"id,omitempty"`
-	Telegram        string       `json:"telegram,omitempty"`
-	Active          bool         `json:"active,omitempty"`
-	Ips             []netip.Addr `json:"ips,omitempty"`
-	MaxIps          int          `json:"maxIps,omitempty"`
-	Model           string       `json:"model,omitempty"`
-	Requests        int          `json:"requests,omitempty"`
-	RequestTokens   int          `json:"requestTokens,omitempty"`
-	GeneratedTokens int          `json:"generatedTokens,omitempty"`
+	Id       int
+	Telegram string
+	Active   bool
+	Ips      []netip.Addr
+	MaxIps   int
+	Model    string
 }
 
 func (c *Customer) IpContains(ip netip.Addr) bool {

@@ -12,8 +12,8 @@ var db *pgxpool.Pool
 func Update(c *Customer) {
 	_, err := db.Exec(
 		context.TODO(),
-		"update customers set ips = $1, requests = $2, request_tokens = $3, generated_tokens = $4 where id = $5",
-		c.Ips, c.Requests, c.RequestTokens, c.GeneratedTokens, c.Id,
+		"update customers set ips = $1 where id = $5",
+		c.Ips, c.Id,
 	)
 	if err != nil {
 		fmt.Println("Failed to save Customer", c.Id, err)
@@ -25,11 +25,22 @@ func GetById(id string) (c *Customer) {
 	return
 }
 
+func AddEvent(e RequestEvent) {
+	_, err := db.Exec(
+		context.TODO(),
+		"insert into requests (customer_id, created_at, completion_tokens, prompt_tokens, status, reason) values ($1, $2, $3, $4, $5, $6)",
+		e.CustomerId, e.CreatedAt, e.CompletionTokens, e.PromptTokens, e.Status, e.Reason,
+	)
+	if err != nil {
+		fmt.Println("Failed to save RequestEvent", e, err)
+	}
+}
+
 func mapCustomer(row interface {
 	Scan(dest ...any) error
 }) (c *Customer) {
 	c = &Customer{}
-	err := row.Scan(&c.Id, &c.Telegram, &c.Active, &c.Ips, &c.MaxIps, &c.Model, &c.Requests, &c.RequestTokens, &c.GeneratedTokens)
+	err := row.Scan(&c.Id, &c.Telegram, &c.Active, &c.Ips, &c.MaxIps, &c.Model)
 	if err != nil {
 		fmt.Println("Failed to map Customer ", err)
 		return nil
@@ -50,6 +61,4 @@ func InitializeDB() {
 	}
 }
 
-func CloseDB() {
-	db.Close()
-}
+var CloseDB = db.Close

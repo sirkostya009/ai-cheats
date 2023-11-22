@@ -1,13 +1,20 @@
-drop table customers;
+create table if not exists customers
+(
+    id       serial primary key,
+    telegram text unique,
+    active   bool   default true,
+    ips      inet[] default '{}'::inet[],
+    max_ips  int    default 1,
+    model    text   default 'gpt-3.5-turbo'
+);
 
-create table customers (
-    id               int primary key,
-    telegram         text unique,
-    active           bool,
-    ips              inet[],
-    max_ips          int,
-    model            text,
-    requests         int,
-    request_tokens   int,
-    generated_tokens int
+create table if not exists requests
+(
+    customer_id       int not null references customers (id),
+    created_at        timestamp,
+    finished_at       timestamp default now(),
+    completion_tokens int,
+    prompt_tokens     int,
+    status            int,
+    reason            text
 );

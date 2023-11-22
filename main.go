@@ -2,44 +2,86 @@ package main
 
 import (
 	"github.com/rs/cors"
+	"github.com/sashabaranov/go-openai"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"net/netip"
 	"os"
+	"time"
 )
+
+type customError struct {
+	message string
+	status  int
+}
+
+func (e *customError) Error() string {
+	return e.message
+}
 
 func checkSalt(salt string) bool {
 	return salt == ""
 }
 
 func request(w http.ResponseWriter, r *http.Request) {
+	var err error
+	createdAt := time.Now()
+	var response *openai.ChatCompletionResponse
+
 	customer := GetById(r.URL.Path[1:])
 
+	defer func() {
+		success := err == nil
+		completionTokes := 0
+		promptTokens := 0
+		status := 200
+		var reason *string = nil
+
+		if success {
+			log.Println("Successfully processed request", r.URL.Path[1:])
+		} else {
+			status = (err.(*customError)).status
+			reason = &(err.(*customError)).message
+			w.WriteHeader(status)
+			log.Println(err)
+		}
+
+		if response != nil {
+			completionTokes = response.Usage.CompletionTokens
+			promptTokens = response.Usage.PromptTokens
+		}
+
+		go AddEvent(RequestEvent{
+			CustomerId:       customer.Id,
+			CreatedAt:        createdAt,
+			CompletionTokens: completionTokes,
+			PromptTokens:     promptTokens,
+			Status:           status,
+			Reason:           reason,
+		})
+	}()
+
 	if !checkSalt(r.Header.Get("X-Salt")) {
-		log.Println("Failed to verify salt", r.Header.Get("X-Salt"))
-		w.WriteHeader(http.StatusBadRequest)
+		err = &customError{"Failed to verify salt" + r.Header.Get("X-Salt"), http.StatusBadRequest}
 		return
 	}
 
 	if customer == nil {
-		log.Println("Failed to fetch customer", r.URL.Path[1:])
-		w.WriteHeader(http.StatusInternalServerError)
+		err = &customError{"Failed to fetch customer " + r.URL.Path[1:], http.StatusNotFound}
 		return
 	}
 
 	if !customer.Active {
-		log.Println("Customer deactivated", customer.Id)
-		w.WriteHeader(http.StatusBadRequest)
+		err = &customError{"Customer is not active", http.StatusForbidden}
 		return
 	}
 
 	remoteHost, _, _ := net.SplitHostPort(r.RemoteAddr)
 	addr, err := netip.ParseAddr(remoteHost)
 	if err != nil {
-		log.Println("Failed to parse remote address", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		err = &customError{"Failed to parse IP address " + err.Error(), http.StatusBadRequest}
 		return
 	}
 
@@ -48,29 +90,23 @@ func request(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !customer.IpContains(addr) {
-		log.Println("IP not in customer's IP list", addr, customer.Ips)
-		w.WriteHeader(http.StatusBadRequest)
+		err = &customError{"IP address is not allowed " + addr.String(), http.StatusForbidden}
 		return
 	}
 
 	prompt, err := io.ReadAll(r.Body)
-	response, err := CallAI(customer.Model, string(prompt))
+	res, err := CallAI(customer.Model, string(prompt))
 	if err != nil {
-		log.Println("Failed to call OpenAI API", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		err = &customError{"Failed to call AI " + err.Error(), http.StatusInternalServerError}
 		return
 	}
 
-	customer.Requests++
-	customer.GeneratedTokens += response.Usage.CompletionTokens
-	customer.RequestTokens += response.Usage.PromptTokens
-
+	response = &res
 	go Update(customer)
 
 	_, err = w.Write([]byte(response.Choices[0].Message.Content))
 	if err != nil {
-		log.Println("Failed to write response", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		err = &customError{"Failed to write response " + err.Error(), http.StatusInternalServerError}
 		return
 	}
 }
