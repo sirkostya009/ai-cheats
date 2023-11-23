@@ -28,43 +28,35 @@ func checkSalt(salt string) bool {
 func request(w http.ResponseWriter, r *http.Request) {
 	var err error
 	createdAt := time.Now()
-	var response *openai.ChatCompletionResponse
+	var response openai.ChatCompletionResponse
 
 	customer := GetById(r.URL.Path[1:])
 
 	defer func() {
-		success := err == nil
-		completionTokes := 0
-		promptTokens := 0
-		status := 200
-		var reason *string = nil
+		event := RequestEvent{
+			CustomerId: customer.Id,
+			CreatedAt:  createdAt,
+			Status:     200,
+			Model:      customer.Model,
+		}
 
-		if success {
+		if err == nil {
 			log.Println("Successfully processed request", r.URL.Path[1:])
+
+			event.CompletionTokens = response.Usage.CompletionTokens
+			event.PromptTokens = response.Usage.PromptTokens
 		} else {
-			status = (err.(*customError)).status
-			reason = &(err.(*customError)).message
-			w.WriteHeader(status)
+			event.Status = (err.(*customError)).status
+			event.Reason = &(err.(*customError)).message
+			w.WriteHeader(event.Status)
 			log.Println(err)
 		}
 
-		if response != nil {
-			completionTokes = response.Usage.CompletionTokens
-			promptTokens = response.Usage.PromptTokens
-		}
-
-		go AddEvent(RequestEvent{
-			CustomerId:       customer.Id,
-			CreatedAt:        createdAt,
-			CompletionTokens: completionTokes,
-			PromptTokens:     promptTokens,
-			Status:           status,
-			Reason:           reason,
-		})
+		go AddEvent(event)
 	}()
 
 	if !checkSalt(r.Header.Get("X-Salt")) {
-		err = &customError{"Failed to verify salt" + r.Header.Get("X-Salt"), http.StatusBadRequest}
+		err = &customError{"Failed to verify salt " + r.Header.Get("X-Salt"), http.StatusBadRequest}
 		return
 	}
 
@@ -85,24 +77,22 @@ func request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(customer.Ips) < customer.MaxIps && !customer.IpContains(addr) {
+	if len(customer.Ips) < customer.MaxIps && !customer.ContainsIp(addr) {
 		customer.Ips = append(customer.Ips, addr)
+		go Update(customer)
 	}
 
-	if !customer.IpContains(addr) {
+	if !customer.ContainsIp(addr) {
 		err = &customError{"IP address is not allowed " + addr.String(), http.StatusForbidden}
 		return
 	}
 
 	prompt, err := io.ReadAll(r.Body)
-	res, err := CallAI(customer.Model, string(prompt))
+	response, err = CallAI(customer.Model, string(prompt))
 	if err != nil {
 		err = &customError{"Failed to call AI " + err.Error(), http.StatusInternalServerError}
 		return
 	}
-
-	response = &res
-	go Update(customer)
 
 	_, err = w.Write([]byte(response.Choices[0].Message.Content))
 	if err != nil {

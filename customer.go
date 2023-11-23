@@ -11,7 +11,7 @@ type Customer struct {
 	Model    string
 }
 
-func (c *Customer) IpContains(ip netip.Addr) bool {
+func (c *Customer) ContainsIp(ip netip.Addr) bool {
 	for _, _ip := range c.Ips {
 		if _ip == ip {
 			return true

@@ -9,4 +9,5 @@ type RequestEvent struct {
 	PromptTokens     int
 	Status           int
 	Reason           *string
+	Model            string
 }

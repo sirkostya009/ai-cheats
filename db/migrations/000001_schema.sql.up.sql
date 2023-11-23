@@ -16,5 +16,6 @@ create table if not exists requests
     completion_tokens int,
     prompt_tokens     int,
     status            int,
-    reason            text
+    reason            text,
+    model             text
 );

@@ -28,8 +28,8 @@ func GetById(id string) (c *Customer) {
 func AddEvent(e RequestEvent) {
 	_, err := db.Exec(
 		context.TODO(),
-		"insert into requests (customer_id, created_at, completion_tokens, prompt_tokens, status, reason) values ($1, $2, $3, $4, $5, $6)",
-		e.CustomerId, e.CreatedAt, e.CompletionTokens, e.PromptTokens, e.Status, e.Reason,
+		"insert into requests (customer_id, created_at, completion_tokens, prompt_tokens, status, reason, model) values ($1, $2, $3, $4, $5, $6, $7)",
+		e.CustomerId, e.CreatedAt, e.CompletionTokens, e.PromptTokens, e.Status, e.Reason, e.Model,
 	)
 	if err != nil {
 		fmt.Println("Failed to save RequestEvent", e, err)
