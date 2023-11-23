@@ -36,6 +36,26 @@ func AddEvent(e RequestEvent) {
 	}
 }
 
+func AverageRequestInterval(customerId int) (interval float64, count int) {
+	err := db.QueryRow(
+		context.TODO(),
+		`
+		select avg(time_diff), count(time_diff)
+		from (
+			select extract(epoch from created_at - lag(created_at) over (order by created_at)) as time_diff
+			from requests
+			where customer_id = 1
+			  and status = 200
+			  and created_at > NOW() - interval '1 hour'
+		) time_diffs`,
+		customerId,
+	).Scan(&interval, &count)
+	if err != nil {
+		fmt.Println("Failed to calculate average request interval", err)
+	}
+	return
+}
+
 func mapCustomer(row interface {
 	Scan(dest ...any) error
 }) (c *Customer) {

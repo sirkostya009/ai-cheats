@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/rs/cors"
 	"github.com/sashabaranov/go-openai"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"net/netip"
@@ -19,10 +19,6 @@ type customError struct {
 
 func (e *customError) Error() string {
 	return e.message
-}
-
-func checkSalt(salt string) bool {
-	return salt == ""
 }
 
 func request(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +37,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err == nil {
-			log.Println("Successfully processed request", r.URL.Path[1:])
+			fmt.Println("Successfully processed request", r.URL.Path[1:])
 
 			event.CompletionTokens = response.Usage.CompletionTokens
 			event.PromptTokens = response.Usage.PromptTokens
@@ -49,16 +45,11 @@ func request(w http.ResponseWriter, r *http.Request) {
 			event.Status = (err.(*customError)).status
 			event.Reason = &(err.(*customError)).message
 			w.WriteHeader(event.Status)
-			log.Println(err)
+			fmt.Println(err)
 		}
 
 		go AddEvent(event)
 	}()
-
-	if !checkSalt(r.Header.Get("X-Salt")) {
-		err = &customError{"Failed to verify salt " + r.Header.Get("X-Salt"), http.StatusBadRequest}
-		return
-	}
 
 	if customer == nil {
 		err = &customError{"Failed to fetch customer " + r.URL.Path[1:], http.StatusNotFound}
@@ -84,6 +75,15 @@ func request(w http.ResponseWriter, r *http.Request) {
 
 	if !customer.ContainsIp(addr) {
 		err = &customError{"IP address is not allowed " + addr.String(), http.StatusForbidden}
+		return
+	}
+
+	interval, count := AverageRequestInterval(customer.Id)
+	if interval < 1000 && count > 5 {
+		err = &customError{
+			fmt.Sprintf("Customer with id %v has been denied access to due to too many requests", customer.Id),
+			http.StatusTooManyRequests,
+		}
 		return
 	}
 
