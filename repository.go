@@ -12,7 +12,7 @@ var db *pgxpool.Pool
 func Update(c *Customer) {
 	_, err := db.Exec(
 		context.TODO(),
-		"update customers set ips = $1 where id = $5",
+		"update customers set ips = $1 where id = $2",
 		c.Ips, c.Id,
 	)
 	if err != nil {
