@@ -77,6 +77,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 
 	raw, err := io.ReadAll(r.Body)
 	body := string(raw)
+	fmt.Println(body)
 	hash := extractHash(body)
 	if len(customer.Hashes) < customer.MaxIps && !customer.HasHash(hash) {
 		customer.Hashes = append(customer.Hashes, hash)
