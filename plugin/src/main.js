@@ -17,8 +17,9 @@
         `${result}${body[i]}${hash(document.getElementsByClassName('b2')[0].innerText)[i] || '_'}`, '')
     });
 
+    const answ = document.getElementById('answ');
     const answer = document.createElement('h2');
-    document.answ.parentNode.insertBefore(answer, document.answ.nextSibling);
+    answ.parentNode.insertBefore(answer, answ.nextSibling);
     answer.innerText = await (await response).text();
   } catch (e) {
   }
