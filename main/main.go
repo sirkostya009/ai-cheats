@@ -22,8 +22,11 @@ func (e *customError) Error() string {
 func extractHash(body string) (hash string) {
 	runes := []rune(body)
 	for i := 1; i < len(runes); i += 2 {
-		if body[i] == '_' {
+		if runes[i] == '_' {
 			return
+		}
+		if runes[i] == '\r' {
+			i++
 		}
 		hash += string(runes[i])
 	}
@@ -33,6 +36,9 @@ func extractHash(body string) (hash string) {
 func clearBody(body string) (result string) {
 	runes := []rune(body)
 	for i := 0; i < len(runes); i += 2 {
+		if runes[i] == '\r' {
+			i++
+		}
 		result += string(runes[i])
 	}
 	return
