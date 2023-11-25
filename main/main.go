@@ -87,7 +87,6 @@ func request(w http.ResponseWriter, r *http.Request) {
 	raw, err := io.ReadAll(r.Body)
 	body := string(raw)
 	hash := extractHash(body)
-	fmt.Println(hash)
 	if len(customer.Hashes) < customer.MaxHashes && !customer.HasHash(hash) {
 		customer.Hashes = append(customer.Hashes, hash)
 		go Update(customer)
@@ -108,7 +107,6 @@ func request(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err = CallAI(customer.Model, clearBody(body))
-	fmt.Println(clearBody(body))
 	if err != nil {
 		err = &customError{"Failed to call AI " + err.Error(), http.StatusInternalServerError}
 		return
