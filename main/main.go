@@ -5,6 +5,7 @@ import (
 	"github.com/rs/cors"
 	"github.com/sashabaranov/go-openai"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -125,5 +126,8 @@ func main() {
 
 	http.HandleFunc("/", request)
 
-	_ = http.ListenAndServe(":"+port, cors.New(cors.Options{AllowedOrigins: []string{"https://test.vntu.edu.ua"}}).Handler(http.DefaultServeMux))
+	_ = http.ListenAndServe(":"+port, cors.New(cors.Options{
+		AllowedOrigins: []string{"https://test.vntu.edu.ua"},
+		Logger:         log.Default(),
+	}).Handler(http.DefaultServeMux))
 }
