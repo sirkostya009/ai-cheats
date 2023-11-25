@@ -52,7 +52,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 	customer := GetById(r.URL.Path[1:])
 
 	defer func() {
-		event := RequestEvent{
+		event := &RequestEvent{
 			CustomerId: customer.Id,
 			CreatedAt:  createdAt,
 			Status:     200,

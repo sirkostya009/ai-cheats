@@ -32,7 +32,7 @@ func GetById(id string) (c *Customer) {
 	return
 }
 
-func AddEvent(e RequestEvent) {
+func AddEvent(e *RequestEvent) {
 	_, err := db.Exec(
 		context.TODO(),
 		"insert into requests (customer_id, created_at, completion_tokens, prompt_tokens, status, reason, model) values ($1, $2, $3, $4, $5, $6, $7)",
@@ -51,9 +51,9 @@ func AverageRequestInterval(customerId int) (interval float64, count int) {
 		from (
 			select extract(epoch from created_at - lag(created_at) over (order by created_at)) as time_diff
 			from requests
-			where customer_id = 1
+			where customer_id = $1
 			  and status = 200
-			  and created_at > NOW() - interval '1 hour'
+			  and created_at > now() - interval '1 hour'
 		) time_diffs`,
 		customerId,
 	).Scan(&interval, &count)
