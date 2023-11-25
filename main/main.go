@@ -21,7 +21,16 @@ func (e *customError) Error() string {
 
 func extractHash(body string) (hash string) {
 	for i := 1; i < len(body); i += 2 {
-		hash += string(body[i])
+		if body[i] != '_' {
+			hash += string(body[i])
+		}
+	}
+	return
+}
+
+func clearBody(body string) (result string) {
+	for i := 0; i < len(body); i += 2 {
+		result += string(body[i])
 	}
 	return
 }
@@ -88,7 +97,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err = CallAI(customer.Model, body)
+	response, err = CallAI(customer.Model, clearBody(body))
 	if err != nil {
 		err = &customError{"Failed to call AI " + err.Error(), http.StatusInternalServerError}
 		return

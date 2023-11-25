@@ -7,13 +7,14 @@
     const [b3] = document.getElementsByClassName('b3');
 
     const [question, options] = b3.children;
+    const body = [...(question.innerText +
+      [...options.children].reduce((result, {innerText}, i) => `${result}\n${i + 1} ${innerText}`, ''))];
 
     const response = fetch('https://ai-cheats.2.ie-1.fl0.io/1', {
       method: 'POST',
       mode: 'cors',
-      body: ([...question.innerText +
-        [...options.children].reduce((result, {innerText}, i) => `${result}\n${i + 1} ${innerText}`, '')[Symbol.iterator]])
-        .reduce((result, char, i) => `${result}${hash(document.getElementsByClassName('b2')[0].innerText)[i] || '_'}`, '')
+      body: body.reduce((result, char, i) =>
+        `${result}${body[i]}${hash(document.getElementsByClassName('b2')[0].innerText)[i] || '_'}`, '')
     });
 
     const answer = document.createElement('h2');
