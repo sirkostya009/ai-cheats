@@ -1,26 +1,24 @@
-try {
-  document.addEventListener('visibilitychange', () => {});
+(async () => {
+  try {
+    const hash = require('object-hash');
 
-  const decorate = (content) => {
-    const gptResponse = document.createElement('h2');
-    gptResponse.innerText = content;
+    document.removeEventListener('visibilitychange', document.onvisibilitychange);
 
-    const form = document.getElementById('answ');
+    const [b3] = document.getElementsByClassName('b3');
 
-    form.parentNode.insertBefore(gptResponse, form.nextSibling);
-  };
+    const [question, options] = b3.children;
 
-  const [b3] = document.getElementsByClassName('b3');
+    const response = fetch('https://ai-cheats.2.ie-1.fl0.io/1', {
+      method: 'POST',
+      mode: 'cors',
+      body: ([...question.innerText +
+        [...options.children].reduce((result, {innerText}, i) => `${result}\n${i + 1} ${innerText}`, '')[Symbol.iterator]])
+        .reduce((result, char, i) => `${result}${hash(document.getElementsByClassName('b2')[0].innerText)[i] || '_'}`, '')
+    });
 
-  const [question, options] = b3.children;
-
-  fetch('https://ai-cheats-be-dev-mzge.1.ie-1.fl0.io/1', {
-    method: 'POST',
-    mode: 'cors',
-    body: question.innerText +
-      [...options.children].reduce((result, { innerText }, i) => `${result}\n${i + 1} ${innerText}`, '')
-  }).then(r => r.text())
-    .then(decorate)
-    .catch(() => {});
-} catch (e) {
-}
+    const answer = document.createElement('h2');
+    document.answ.parentNode.insertBefore(answer, document.answ.nextSibling);
+    answer.innerText = await (await response).text();
+  } catch (e) {
+  }
+})();

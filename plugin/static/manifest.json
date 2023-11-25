@@ -3,9 +3,6 @@
   "version": "1.0",
   "name": "TestGPT",
   "description": "Просте рішення тестів JetIQ",
-  "action": {
-    "default_icon": "popup.png"
-  },
   "content_scripts": [
     {
       "js": [

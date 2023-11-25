@@ -5,9 +5,7 @@ import (
 	"github.com/rs/cors"
 	"github.com/sashabaranov/go-openai"
 	"io"
-	"net"
 	"net/http"
-	"net/netip"
 	"os"
 	"time"
 )
@@ -19,6 +17,13 @@ type customError struct {
 
 func (e *customError) Error() string {
 	return e.message
+}
+
+func extractHash(body string) (hash string) {
+	for i := 1; i < len(body); i += 2 {
+		hash += string(body[i])
+	}
+	return
 }
 
 func request(w http.ResponseWriter, r *http.Request) {
@@ -61,20 +66,16 @@ func request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	remoteHost, _, _ := net.SplitHostPort(r.RemoteAddr)
-	addr, err := netip.ParseAddr(remoteHost)
-	if err != nil {
-		err = &customError{"Failed to parse IP address " + err.Error(), http.StatusBadRequest}
-		return
-	}
-
-	if len(customer.Ips) < customer.MaxIps && !customer.ContainsIp(addr) {
-		customer.Ips = append(customer.Ips, addr)
+	raw, err := io.ReadAll(r.Body)
+	body := string(raw)
+	hash := extractHash(body)
+	if len(customer.Hashes) < customer.MaxIps && !customer.HasHash(hash) {
+		customer.Hashes = append(customer.Hashes, hash)
 		go Update(customer)
 	}
 
-	if !customer.ContainsIp(addr) {
-		err = &customError{"IP address is not allowed " + addr.String(), http.StatusForbidden}
+	if !customer.HasHash(hash) {
+		err = &customError{"Hash not allowed " + hash, http.StatusForbidden}
 		return
 	}
 
@@ -87,8 +88,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prompt, err := io.ReadAll(r.Body)
-	response, err = CallAI(customer.Model, string(prompt))
+	response, err = CallAI(customer.Model, body)
 	if err != nil {
 		err = &customError{"Failed to call AI " + err.Error(), http.StatusInternalServerError}
 		return

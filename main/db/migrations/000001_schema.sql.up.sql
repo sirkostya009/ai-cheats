@@ -3,7 +3,7 @@ create table if not exists customers
     id       serial primary key,
     telegram text unique,
     active   bool   default true,
-    ips      inet[] default '{}'::inet[],
+    hashes   text[] default '{}'::text[],
     max_ips  int    default 1,
     model    text   default 'gpt-3.5-turbo'
 );

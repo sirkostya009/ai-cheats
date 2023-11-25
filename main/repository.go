@@ -12,8 +12,8 @@ var db *pgxpool.Pool
 func Update(c *Customer) {
 	_, err := db.Exec(
 		context.TODO(),
-		"update customers set ips = $1 where id = $2",
-		c.Ips, c.Id,
+		"update customers set hashes = $1 where id = $2",
+		c.Hashes, c.Id,
 	)
 	if err != nil {
 		fmt.Println("Failed to save Customer", c.Id, err)
@@ -21,7 +21,14 @@ func Update(c *Customer) {
 }
 
 func GetById(id string) (c *Customer) {
-	c = mapCustomer(db.QueryRow(context.TODO(), "select * from customers where id = $1", id))
+	c = &Customer{}
+	err := db.QueryRow(context.TODO(), "select * from customers where id = $1", id).Scan(
+		&c.Id, &c.Telegram, &c.Active, &c.Hashes, &c.MaxIps, &c.Model,
+	)
+	if err != nil {
+		fmt.Println("Failed to map Customer ", err)
+		return nil
+	}
 	return
 }
 
@@ -52,18 +59,6 @@ func AverageRequestInterval(customerId int) (interval float64, count int) {
 	).Scan(&interval, &count)
 	if err != nil {
 		fmt.Println("Failed to calculate average request interval", err)
-	}
-	return
-}
-
-func mapCustomer(row interface {
-	Scan(dest ...any) error
-}) (c *Customer) {
-	c = &Customer{}
-	err := row.Scan(&c.Id, &c.Telegram, &c.Active, &c.Ips, &c.MaxIps, &c.Model)
-	if err != nil {
-		fmt.Println("Failed to map Customer ", err)
-		return nil
 	}
 	return
 }
