@@ -20,17 +20,19 @@ func (e *customError) Error() string {
 }
 
 func extractHash(body string) (hash string) {
+	runes := []rune(body)
 	for i := 1; i < len(body); i += 2 {
 		if body[i] != '_' {
-			hash += string(body[i])
+			hash += string(runes[i])
 		}
 	}
 	return
 }
 
 func clearBody(body string) (result string) {
+	runes := []rune(body)
 	for i := 0; i < len(body); i += 2 {
-		result += string(body[i])
+		result += string(runes[i])
 	}
 	return
 }
@@ -79,7 +81,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 	body := string(raw)
 	fmt.Println(body)
 	hash := extractHash(body)
-	if len(customer.Hashes) < customer.MaxIps && !customer.HasHash(hash) {
+	if len(customer.Hashes) < customer.MaxHashes && !customer.HasHash(hash) {
 		customer.Hashes = append(customer.Hashes, hash)
 		go Update(customer)
 	}

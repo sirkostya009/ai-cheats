@@ -1,12 +1,12 @@
 package main
 
 type Customer struct {
-	Id       int
-	Telegram string
-	Active   bool
-	Hashes   []string
-	MaxIps   int
-	Model    string
+	Id        int
+	Telegram  string
+	Active    bool
+	Hashes    []string
+	MaxHashes int
+	Model     string
 }
 
 func (c *Customer) HasHash(hash string) bool {
