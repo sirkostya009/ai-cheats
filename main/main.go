@@ -98,7 +98,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 	}
 
 	interval, count := AverageRequestInterval(customer.Id)
-	if interval < 1000 && count > 5 {
+	if interval < 1.0 && count > 3 { // 3 requests per second
 		err = &customError{
 			fmt.Sprintf("Customer with id %v has been denied access to due to too many requests", customer.Id),
 			http.StatusTooManyRequests,
