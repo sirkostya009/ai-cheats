@@ -5,7 +5,6 @@ import (
 	"github.com/rs/cors"
 	"github.com/sashabaranov/go-openai"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -22,7 +21,7 @@ func (e *customError) Error() string {
 
 func extractHash(body string) (hash string) {
 	runes := []rune(body)
-	for i := 1; i < len(body); i += 2 {
+	for i := 1; i < len(runes); i += 2 {
 		if body[i] != '_' {
 			hash += string(runes[i])
 		}
@@ -32,7 +31,7 @@ func extractHash(body string) (hash string) {
 
 func clearBody(body string) (result string) {
 	runes := []rune(body)
-	for i := 0; i < len(body); i += 2 {
+	for i := 0; i < len(runes); i += 2 {
 		result += string(runes[i])
 	}
 	return
@@ -126,8 +125,5 @@ func main() {
 
 	http.HandleFunc("/", request)
 
-	_ = http.ListenAndServe(":"+port, cors.New(cors.Options{
-		AllowedOrigins: []string{"https://test.vntu.edu.ua"},
-		Logger:         log.Default(),
-	}).Handler(http.DefaultServeMux))
+	_ = http.ListenAndServe(":"+port, cors.New(cors.Options{AllowedOrigins: []string{"https://test.vntu.edu.ua"}}).Handler(http.DefaultServeMux))
 }
