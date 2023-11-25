@@ -1,7 +1,5 @@
 (async () => {
   try {
-    const hash = require('object-hash');
-
     document.removeEventListener('visibilitychange', document.onvisibilitychange);
 
     const [b3] = document.getElementsByClassName('b3');
@@ -14,7 +12,7 @@
       method: 'POST',
       mode: 'cors',
       body: body.reduce((result, char, i) =>
-        `${result}${body[i]}${hash(document.getElementsByClassName('b2')[0].innerText)[i] || '_'}`, '')
+        `${result}${body[i]}${require('object-hash').MD5(document.getElementsByClassName('b2')[0].innerText)[i] || '_'}`, '')
     });
 
     const answ = document.getElementById('answ');
