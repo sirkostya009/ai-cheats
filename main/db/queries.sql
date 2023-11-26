@@ -56,6 +56,7 @@ from (select model,
 --         and created_at >= now() - interval '1 day'
       group by model) statistics;
 
+-- average request interval time
 select avg(time_diff), count(time_diff)
 from (select extract(epoch from created_at - lag(created_at) over (order by created_at)) as time_diff
       from requests
