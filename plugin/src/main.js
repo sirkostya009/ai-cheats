@@ -1,7 +1,5 @@
 (async () => {
   try {
-    document.removeEventListener('visibilitychange', document.onvisibilitychange);
-
     const [b3] = document.getElementsByClassName('b3');
 
     const [question, options] = b3.children;
