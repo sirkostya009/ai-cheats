@@ -79,6 +79,12 @@ func request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	interval, count := AverageRequestInterval(customer.Id)
+	if interval < 1.0 && count > 3 { // 3 requests per second
+		err = &customError{"Too many requests", http.StatusTooManyRequests}
+		return
+	}
+
 	if !customer.Active {
 		err = &customError{"Customer is not active", http.StatusForbidden}
 		return
@@ -87,6 +93,13 @@ func request(w http.ResponseWriter, r *http.Request) {
 	raw, err := io.ReadAll(r.Body)
 	body := string(raw)
 	hash := extractHash(body)
+	body = clearBody(body)
+
+	if len(body) > 1000 {
+		err = &customError{"Request body is too long", http.StatusForbidden}
+		return
+	}
+
 	if len(customer.Hashes) < customer.MaxHashes && !customer.HasHash(hash) {
 		customer.Hashes = append(customer.Hashes, hash)
 		go Update(customer)
@@ -97,16 +110,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	interval, count := AverageRequestInterval(customer.Id)
-	if interval < 1.0 && count > 3 { // 3 requests per second
-		err = &customError{
-			fmt.Sprintf("Customer with id %v has been denied access to due to too many requests", customer.Id),
-			http.StatusTooManyRequests,
-		}
-		return
-	}
-
-	response, err = CallAI(customer.Model, clearBody(body))
+	response, err = CallAI(customer.Model, body)
 	if err != nil {
 		err = &customError{"Failed to call AI " + err.Error(), http.StatusInternalServerError}
 		return
