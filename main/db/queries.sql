@@ -50,7 +50,7 @@ select *,
            case
                when model like '%3.5%' then :input3_5_price
                when model like '%4%' then :input4_price
-               end) / 100 + completion_tokens * (
+               end) / 1000 + completion_tokens * (
            case
                when model like '%3.5%' then :output3_5_price
                when model like '%4%' then :output4_price
