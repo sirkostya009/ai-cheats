@@ -14,33 +14,38 @@ update customers
 set hashes = '{}'
 where id = 1;
 
+-- move customer to a newer model
+update customers
+set model = 'gpt-4-1106-preview'
+where id = 1;
+
 -- request analytics per model, uncomment a where clause to filter only recent requests
 -- input3_5_price: 0.001
 -- input4_price: 0.01
 -- output3_5_price: 0.002
 -- output4_price: 0.03
 select *,
-       prompt_tokens / total_requests       as prompt_tokens_per_request,
-       completion_tokens / total_requests   as completion_tokens_per_request,
+       prompt_tokens / total_requests        as prompt_tokens_per_request,
+       completion_tokens / total_requests    as completion_tokens_per_request,
        prompt_tokens * (
            case
                when model like '%3.5%' then :input3_5_price
                when model like '%4%' then :input4_price
-               end) / 100                   as total_input_price,
+               end) / 1000                   as total_input_price,
        completion_tokens * (
            case
                when model like '%3.5%' then :output3_5_price
                when model like '%4%' then :output4_price
-               end) / 100                   as total_output_price,
+               end) / 1000                   as total_output_price,
        prompt_tokens * (
            case
                when model like '%3.5%' then :input3_5_price
                when model like '%4%' then :input4_price
-               end) / 100 + completion_tokens * (
+               end) / 1000 + completion_tokens * (
            case
                when model like '%3.5%' then :output3_5_price
                when model like '%4%' then :output4_price
-               end) / 100                   as total_price,
+               end) / 1000                   as total_price,
        (prompt_tokens * (
            case
                when model like '%3.5%' then :input3_5_price
@@ -49,7 +54,7 @@ select *,
            case
                when model like '%3.5%' then :output3_5_price
                when model like '%4%' then :output4_price
-               end) / 100) / total_requests as price_per_request
+               end) / 1000) / total_requests as price_per_request
 from (select model,
              avg(finished_at - created_at) as average_completion_time,
              sum(prompt_tokens)            as prompt_tokens,
@@ -70,36 +75,36 @@ from (select extract(epoch from created_at - lag(created_at) over (order by crea
 
 -- request analytics per model and customer, comment out the where clause to include all requests
 select *,
-       prompt_tokens / total_requests       as prompt_tokens_per_request,
-       completion_tokens / total_requests   as completion_tokens_per_request,
+       prompt_tokens / total_requests        as prompt_tokens_per_request,
+       completion_tokens / total_requests    as completion_tokens_per_request,
        prompt_tokens * (
            case
                when model like '%3.5%' then :input3_5_price
                when model like '%4%' then :input4_price
-               end) / 100                   as total_input_price,
+               end) / 1000                   as total_input_price,
        completion_tokens * (
            case
                when model like '%3.5%' then :output3_5_price
                when model like '%4%' then :output4_price
-               end) / 100                   as total_output_price,
+               end) / 1000                   as total_output_price,
        prompt_tokens * (
            case
                when model like '%3.5%' then :input3_5_price
                when model like '%4%' then :input4_price
-               end) / 100 + completion_tokens * (
+               end) / 1000 + completion_tokens * (
            case
                when model like '%3.5%' then :output3_5_price
                when model like '%4%' then :output4_price
-               end) / 100                   as total_price,
+               end) / 1000                   as total_price,
        (prompt_tokens * (
            case
                when model like '%3.5%' then :input3_5_price
                when model like '%4%' then :input4_price
-               end) / 100 + completion_tokens * (
+               end) / 1000 + completion_tokens * (
            case
                when model like '%3.5%' then :output3_5_price
                when model like '%4%' then :output4_price
-               end) / 100) / total_requests as price_per_request
+               end) / 1000) / total_requests as price_per_request
 from (select customer_id,
              model,
              avg(finished_at - created_at) as average_completion_time,
