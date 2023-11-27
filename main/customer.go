@@ -10,8 +10,8 @@ type Customer struct {
 }
 
 func (c *Customer) HasHash(hash string) bool {
-	for _, _ip := range c.Hashes {
-		if _ip == hash {
+	for _, _hash := range c.Hashes {
+		if _hash == hash {
 			return true
 		}
 	}
