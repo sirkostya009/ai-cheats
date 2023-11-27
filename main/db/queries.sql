@@ -1,13 +1,15 @@
 /* This document contains multiple SQL queries for
    analyzing, manipulating and monitoring the database. */
 
-select * from customers;
+select *, active_till > now() as active
+from customers;
 
 select * from requests
 order by created_at desc;
 
 -- add new customer
-insert into customers (telegram) values ('@sirkostya009');
+insert into customers (telegram, active_till)
+values ('@sirkostya009', now() + interval '1 month');
 
 -- reset customer hashes
 update customers

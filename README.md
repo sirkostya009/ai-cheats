@@ -25,7 +25,7 @@ What nationality was Frédéric Chopin?
 ```
 
 Before doing so, however, make sure you have a user with the same ID in the database, otherwise you'll get a 404, and
-also that user must have `active` column set to `true`.
+also that user must have `active_till` column set to any future date value.
 
 ### Stuff that may be improved
 - [ ] IP-based usage locking

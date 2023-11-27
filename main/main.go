@@ -85,7 +85,7 @@ func request(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !customer.Active {
+	if customer.ActiveTill.Unix() <= createdAt.Unix() {
 		err = &customError{"Customer is not active", http.StatusForbidden}
 		return
 	}

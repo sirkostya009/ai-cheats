@@ -23,7 +23,7 @@ func Update(c *Customer) {
 func GetById(id string) (c *Customer) {
 	c = &Customer{}
 	err := db.QueryRow(context.TODO(), "select * from customers where id = $1", id).Scan(
-		&c.Id, &c.Telegram, &c.Active, &c.Hashes, &c.MaxHashes, &c.Model,
+		&c.Id, &c.Telegram, &c.ActiveTill, &c.Hashes, &c.MaxHashes, &c.Model,
 	)
 	if err != nil {
 		fmt.Println("Failed to map Customer ", err)
